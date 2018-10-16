@@ -1,5 +1,8 @@
 package org.shyu.springboot.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.sql.DataSource;
 
 import org.shyu.springboot.listener.JobCompletionNotificationListener;
@@ -11,16 +14,13 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
-import org.springframework.batch.item.file.mapping.DefaultLineMapper;
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.xml.StaxEventItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.oxm.xstream.XStreamMarshaller;
 
 @Configuration
 @EnableBatchProcessing
@@ -35,19 +35,19 @@ public class BatchConfiguration {
     public DataSource dataSource;
 
     @Bean
-    public FlatFileItemReader<Person> reader() {
-        FlatFileItemReader<Person> reader = new FlatFileItemReader<Person>();
-        reader.setResource(new ClassPathResource("persons.csv"));
-        reader.setLineMapper(new DefaultLineMapper<Person>() {{
-            setLineTokenizer(new DelimitedLineTokenizer() {{
-                setNames(new String[] { "firstName", "lastName","email","age" });
-            }});
-            setFieldSetMapper(new BeanWrapperFieldSetMapper<Person>() {{
-                setTargetType(Person.class);
-            }});
-        }});
-        return reader;
-    }
+	public StaxEventItemReader<Person> reader(){
+		StaxEventItemReader<Person> reader = new StaxEventItemReader<Person>();
+		reader.setResource(new ClassPathResource("persons.xml"));
+		reader.setFragmentRootElementName("person");
+		
+		Map<String,String> aliasesMap =new HashMap<String,String>();
+		aliasesMap.put("person", "org.shyu.springboot.model.Person");
+		XStreamMarshaller marshaller = new XStreamMarshaller();
+		marshaller.setAliases(aliasesMap);
+		
+		reader.setUnmarshaller(marshaller);
+		return reader;
+}
 
     @Bean
     public PersonItemProcessor processor() {
@@ -57,8 +57,11 @@ public class BatchConfiguration {
     @Bean
     public JdbcBatchItemWriter<Person> writer() {
         JdbcBatchItemWriter<Person> writer = new JdbcBatchItemWriter<Person>();
-        writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Person>());
-        writer.setSql("INSERT INTO person (first_name, last_name,email,age) VALUES (:firstName, :lastName,:email,:age)");
+        
+        //writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Person>());
+        //writer.setSql("INSERT INTO person (first_name, last_name,email,age) VALUES (:firstName, :lastName,:email,:age)");
+        writer.setSql("INSERT INTO person (person_id, first_name, last_name,e mail, age) VALUES (?,?,?,?,?)");
+        writer.setItemPreparedStatementSetter(new PersonPreparedStatementSetter());
         writer.setDataSource(dataSource);
         return writer;
     }

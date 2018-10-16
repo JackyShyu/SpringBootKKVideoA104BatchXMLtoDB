@@ -5,21 +5,18 @@ import java.io.Serializable;
 public class Person implements Serializable {
 	private static final long serialVersionUID = -5769644060847725219L;
 	
+	private int personId;
 	private String lastName;
 	private String firstName;
 	private String email;
 	private int age;
 	
-	public Person() {
+	public int getPersonId() {
+		return personId;
 	}
-	
-	public Person(String firstName, String lastName, String email, int age) {
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.email = email;
-		this.age = age;
+	public void setPersonId(int personId) {
+		this.personId = personId;
 	}
-	
 	public String getLastName() {
 		return lastName;
 	}
@@ -48,4 +45,5 @@ public class Person implements Serializable {
 	public String toString() {
 		return "Last Name: " + this.getLastName() + ", First Name: " + this.getFirstName() + ", Email: " + this.getEmail() + ", Age: " + this.getAge();
 	}
+	
 }
