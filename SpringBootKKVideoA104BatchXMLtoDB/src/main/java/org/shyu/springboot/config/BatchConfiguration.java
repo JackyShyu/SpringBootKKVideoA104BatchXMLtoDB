@@ -60,7 +60,7 @@ public class BatchConfiguration {
         
         //writer.setItemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<Person>());
         //writer.setSql("INSERT INTO person (first_name, last_name,email,age) VALUES (:firstName, :lastName,:email,:age)");
-        writer.setSql("INSERT INTO person (person_id, first_name, last_name,e mail, age) VALUES (?,?,?,?,?)");
+        writer.setSql("INSERT INTO person (person_id, last_name, first_name, email, age) VALUES (?,?,?,?,?)");
         writer.setItemPreparedStatementSetter(new PersonPreparedStatementSetter());
         writer.setDataSource(dataSource);
         return writer;
